@@ -1,4 +1,4 @@
-from flask import Flask, redirect, render_template, request, session, url_for
+from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 from flask_login import LoginManager, UserMixin, login_required,login_user,logout_user,current_user
 from flask_sqlalchemy import SQLAlchemy
 import uuid 
@@ -47,6 +47,21 @@ def create():
     else:
         return render_template("create.html")
 
+@app.route("/api/create",methods=["POST"])
+def api_create():
+    """投稿を処理する関数(API)"""
+    try:
+        _json=request.get_json()
+        title=_json["title"]
+        content=_json["content"]
+        ip=request.remote_addr
+        user_id=current_user.id
+        db.session.add(Post(title=title,content=content,ip=ip,user_id=user_id))
+        db.session.commit()
+        return jsonify({"result":"success"})
+    except Exception as e:
+        return jsonify({"result":"fail"})
+    
 @app.route("/post/<uuid:post_id>")
 def post(post_id):
     """投稿を表示する関数"""
@@ -55,7 +70,15 @@ def post(post_id):
     user=User.query.filter(User.id==post.user_id).first()
     return render_template("post.html", post=post.to_dict(), user=user.to_dict())
 
-@app.route("/post/<uuid:post_id>/delete", methods=["POST"])
+@app.route("/api/post/<uuid:post_id>")
+def api_post(post_id):
+    """投稿の内容を返すAPI"""
+    post_id=str(post_id)
+    post=Post.query.filter(Post.id==post_id).first()
+    user=User.query.filter(User.id==post.user_id).first()
+    return jsonify({"post":post.to_dict(),"user":user.to_dict()})
+
+@app.route("/post/<uuid:post_id>/delete")
 @login_required
 def delete(post_id):
     """投稿を削除する関数"""
@@ -69,6 +92,18 @@ def delete(post_id):
         return redirect(url_for("home"))
     else:
         return render_template("home.html")
+
+@app.route("/api/post/<uuid:post_id>/delete")
+@login_required
+def api_delete(post_id):
+    """投稿を削除する関数(API)"""
+    post_id=str(post_id)
+    post=Post.query.filter(Post.id==post_id).first()
+    if post.user_id!=current_user.id:
+        return jsonify({"result":"fail"})
+    db.session.delete(post)
+    db.session.commit()
+    return jsonify({"result":"success"})
 
 @app.route("/login", methods=["GET","POST"])
 def login():
@@ -86,12 +121,33 @@ def login():
     else:
         return render_template("login.html")
 
+@app.route("/api/login", methods=["POST"])
+def api_login():
+    """ログインを処理するAPI"""
+    _json=request.get_json()
+    username=_json["username"]
+    password=_json["password"]
+    user=User.query.filter(User.username==username).first()
+    if user and user.check_password(password):
+        login_user(user)
+        session["user_id"]=user.id
+        return jsonify({"result":"success"})
+    else:
+        return jsonify({"result":"fail"})
+
 @app.route("/logout")
 def logout():
     """ログアウトする関数"""
     logout_user()
     session.clear()
     return redirect(url_for("home"))
+
+@app.route("/api/logout")
+def api_logout():
+    """ログアウトするAPI"""
+    logout_user()
+    session.clear()
+    return jsonify({"result":"success"})
 
 @app.route("/signup", methods=["GET","POST"])
 def signup():
@@ -110,6 +166,21 @@ def signup():
     else:
         return render_template("signup.html")
 
+@app.route("/api/signup", methods=["POST"])
+def api_signup():
+    """新規登録を処理するAPI"""
+    _json=request.get_json()
+    username=_json["username"]
+    email=_json["email"]
+    department=_json["department"]
+    password=generate_password_hash(_json["password"],method="pbkdf2:sha256")
+    user=User.query.filter(User.username==username).first()
+    if user:
+        return jsonify({"result":"username_collision"})
+    db.session.add(User(username=username, email=email, password=password, department=department))
+    db.session.commit()
+    return redirect({"result":"success"})
+
 @app.route("/friend", methods=["POST","GET"])
 @login_required
 def friend():
@@ -125,6 +196,21 @@ def friend():
         friends_list.append(friend_user_dict)
     return render_template("friend.html", friends=friends_list)
 
+@app.route("/api/friend", methods=["GET"])
+@login_required
+def api_friend():
+    """フレンド一覧を返すAPI"""
+    friends=Friend.query.filter(Friend.user_id==current_user.id).all()
+    friends_list=[]
+    for friend in friends:
+        friend_user=User.query.filter(User.id==friend.friend_id).first()
+        friend_user_dict=friend_user.to_dict()
+        friend_user_dict["friend_id"]=friend.friend_id
+        friend_user_dict["user_id"]=friend.user_id
+        friend_user_dict["created_at"]=friend.created_at.strftime("%Y-%m-%d %H:%M:%S")  
+        friends_list.append(friend_user_dict)
+    return jsonify(friends_list)
+
 @app.route("/friend/<uuid:friend_id>", methods=["POST"])
 @login_required
 def friend_add(friend_id):
@@ -134,10 +220,28 @@ def friend_add(friend_id):
     db.session.commit()
     return redirect(url_for("user", user_id=friend_id))
 
+@app.route("/api/friend/<uuid:friend_id>", methods=["POST"])
+@login_required
+def api_friend_add(friend_id):
+    """フレンドを追加する関数(API)"""
+    friend_id=str(friend_id)
+    db.session.add(Friend(user_id=current_user.id, friend_id=friend_id))
+    db.session.commit()
+    return redirect({"result":"success"})
+
 @app.route("/friend/<uuid:friend_id>/delete", methods=["POST"])
 @login_required
 def friend_delete(friend_id):
     """フレンドを削除する関数"""
+    friend_id=str(friend_id)
+    db.session.delete(Friend.query.filter(Friend.user_id==current_user.id, Friend.friend_id==friend_id).first())
+    db.session.commit()
+    return redirect(url_for("user", user_id=friend_id))
+
+@app.route("/api/friend/<uuid:friend_id>/delete", methods=["POST"])
+@login_required
+def api_friend_delete(friend_id):
+    """フレンドを削除する関数(API)"""
     friend_id=str(friend_id)
     db.session.delete(Friend.query.filter(Friend.user_id==current_user.id, Friend.friend_id==friend_id).first())
     db.session.commit()
@@ -157,6 +261,19 @@ def schedule():
     classes_list.sort(key=lambda x: x["time"])
     return render_template("schedule.html", classes=classes_list, user=user.to_dict())
 
+@app.route("/api/schedule")
+@login_required
+def api_schedule():
+    """時間割を返すAPI"""
+    classes=Class_entry.query.filter(Class_entry.user_id==current_user.id).all()
+    classes_list=[]
+    user=User.query.filter(User.id==current_user.id).first()
+    for class_entry in classes:
+        class_detail=Class.query.filter(Class.id==class_entry.class_id).first()
+        class_detail_dict=class_detail.to_dict()
+        classes_list.append(class_detail_dict)
+    return jsonify(classes_list)
+
 @app.route("/user/<uuid:user_id>")
 @login_required
 def user(user_id):
@@ -168,6 +285,18 @@ def user(user_id):
         return redirect(url_for("home"))
     posts=Post.query.filter(Post.user_id==str(user_id)).all()
     return render_template("user.html", user=user.to_dict(), posts=list(map(lambda x: x.to_dict(), posts)), friend=friend)
+
+@app.route("/api/user/<uuid:user_id>")
+@login_required
+def api_user(user_id):
+    """ユーザの情報を返すAPI"""
+    user_id=str(user_id)
+    user=User.query.filter(User.id==user_id).first()
+    friend=Friend.query.filter(Friend.user_id==current_user.id, Friend.friend_id==user_id).first()
+    if not user:
+        return redirect({"result":"user_not_found"})
+    posts=Post.query.filter(Post.user_id==str(user_id)).all()
+    return jsonify({"user":user,"posts":map(Post.to_dict,posts)})
 
 @app.route("/classes")
 def classes():
@@ -201,6 +330,39 @@ def classes():
     classes=Class.query.filter(*filters).limit(1000).all()
     return render_template("classes.html", classes=list(map(lambda x: x.to_dict(), classes)))
 
+@app.route("/api/classes")
+def api_classes():
+    """授業の情報を返すAPI"""
+    name=request.args.get("name")
+    code=request.args.get("code")
+    department=request.args.get("department")
+    time=request.args.get("time")
+    day=request.args.get("day")
+    season=request.args.get("season")
+    teacher=request.args.get("teacher")
+    filters=[]
+    if season=="spring":
+        filters.append(Class.is_spring==True)
+    elif season=="autumn":
+        filters.append(Class.is_autumn==True)
+    elif season=="other":
+        filters.append(Class.is_spring==False)
+        filters.append(Class.is_autumn==False)
+    if name:
+        filters.append(Class.name.like(f"%{name}%"))
+    if code:
+        filters.append(Class.code.like(f"%{code}%"))
+    if department:
+        filters.append(Class.department==department)
+    if time:
+        filters.append(Class.time==time)
+    if day: 
+        filters.append(Class.day==day)
+    if teacher:
+        filters.append(Class.teacher.like(f"%{teacher}%"))
+    classes=list(map(Class.to_dict,Class.query.filter(*filters).limit(1000).all()))
+    return jsonify(classes)
+
 @app.route("/class/<uuid:class_id>")
 def class_detail(class_id):
     """授業詳細ページを表示する関数"""
@@ -208,6 +370,14 @@ def class_detail(class_id):
     class_detail=Class.query.filter(Class.id==class_id).first()
     class_entry=Class_entry.query.filter(Class_entry.class_id==class_id,Class_entry.user_id==current_user.id).first()
     return render_template("class_detail.html", class_detail=class_detail.to_dict(),class_entry=class_entry)
+
+@app.route("/api/class/<uuid:class_id>")
+def api_class_detail(class_id):
+    """授業の詳細情報を返すAPI"""
+    class_id=str(class_id)
+    class_detail=Class.query.filter(Class.id==class_id).first()
+    class_entry=Class_entry.query.filter(Class_entry.class_id==class_id,Class_entry.user_id==current_user.id).first()
+    return jsonify({"class_entry":bool(class_entry),"class_detail":class_detail.to_dict()})
 
 @app.route("/class/<uuid:class_id>/add", methods=["GET"])
 @login_required
@@ -217,6 +387,15 @@ def class_add(class_id):
     db.session.add(Class_entry(user_id=current_user.id, class_id=class_id))
     db.session.commit()
     return redirect(url_for("schedule"))
+
+@app.route("/api/class/<uuid:class_id>/add", methods=["GET"])
+@login_required
+def api_class_add(class_id):
+    """授業を時間割に追加するAPI"""
+    class_id=str(class_id)
+    db.session.add(Class_entry(user_id=current_user.id, class_id=class_id))
+    db.session.commit()
+    return jsonify({"result":"success"})
 
 @app.route("/class/<uuid:class_id>/delete",methods=["GET"])
 @login_required
@@ -244,5 +423,18 @@ def aboutme():
         user=User.query.filter(User.id==current_user.id).first()
         return render_template("aboutme.html", user=user.to_dict())
 
+@app.route("/api/aboutme", methods=["POST"])
+@login_required
+def api_aboutme():
+    """自分の情報を変更するAPI"""
+    _json=request.get_json()
+    name=_json["name"]
+    department=_json["department"]
+    user=User.query.filter(User.id==current_user.id).first()
+    user.name=name
+    user.department=department
+    db.session.commit()
+    return jsonify(dict(result="success"))
+    
 if __name__=="__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
