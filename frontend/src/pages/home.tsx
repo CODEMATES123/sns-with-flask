@@ -1,32 +1,36 @@
-import React, { useState } from 'react'
+// import React, { useEffect, useState } from 'react'
 import { apiBaseURL } from '../constants'
-
-type Class={
-  id:number,
-  department:string,
-  code:string,
-  name:string,
-  season:string,
-  time:string,
-  day:string,
-  place:string,
-  unit:number,
-  teacher:string,
-  grade_min:number,
-  grade_max:number,
-  note:string,
-  error:string,
-  is_spring:boolean,
-  is_autumn:boolean
-}
+import Menu from '../components/menu'
+import useSWR from 'swr'
+import usePosts from '../usePosts'
+ 
+// type Class={
+//   id:number,
+//   department:string,
+//   code:string,
+//   name:string,
+//   season:string,
+//   time:string,
+//   day:string,
+//   place:string,
+//   unit:number,
+//   teacher:string,
+//   grade_min:number,
+//   grade_max:number,
+//   note:string,
+//   error:string,
+//   is_spring:boolean,
+//   is_autumn:boolean
+// }
 
 const Home = () => {
-  const [classes,setClasses]=useState<Class[]>([])
-  fetch(`${apiBaseURL}/api/classes`).then(res=>res.json()).then(data=>{
-    setClasses(data)
-  })
+  // const [posts,setPosts]=useState([])
+  const {isLoading,posts}=usePosts("")
   return (
-    <div>{classes.length===0?"ロード中...":JSON.stringify(classes)}</div>
+    <div>
+    <Menu/>
+    {isLoading?"ロード中...":posts.length==0?"投稿がありません":JSON.stringify(posts)}
+    </div>
   )
 }
 
