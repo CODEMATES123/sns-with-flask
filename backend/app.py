@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, redirect, render_template, request, session, url_for
+from flask import Flask, json, jsonify, redirect, render_template, request, session, url_for
 from flask_login import LoginManager, UserMixin, login_required,login_user,logout_user,current_user
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
@@ -9,14 +9,30 @@ from werkzeug.security import generate_password_hash,check_password_hash
 from models import User, Post, Reaction, Friend, Class, Class_entry, db
 
 app=Flask(__name__)
+
+# support_credentialsがないとCORS絡みで弾かれると思われる
+CORS(app,supports_credentials=True,origins=["http://localhost:5173","127.0.0.1"])
+
 app.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///database.db"
 app.config["SECRET_KEY"]="codemates1234567890"
+
+# これがないと@login_requiredではじかれる
+app.config.update(
+    SESSION_COOKIE_SAMESITE="None",
+    SESSION_COOKIE_SECURE=True
+)
 db.init_app(app)
+
 
 login_manager=LoginManager(app)
 login_manager.init_app(app)
 login_manager.login_view="login"
-CORS(app)
+
+
+@login_manager.unauthorized_handler
+def unauthorized():
+    return jsonify({"error":"unauthorized"}),401
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -33,6 +49,12 @@ def home():
     """ホームページを表示する関数"""
     posts= Post.query.join(User).add_columns(User.username).all()
     return render_template("home.html", posts=posts)
+
+@app.route("/api/posts")
+def api_posts():
+    """ホームページを表示する関数"""
+    posts= Post.query.join(User).add_columns(User.username).all()
+    return jsonify(list(map(lambda x:{"post":x[0].to_dict(),"username":x[1]},posts)))
 
 @app.route("/create", methods=["POST","GET"])
 @login_required
@@ -126,16 +148,18 @@ def login():
 @app.route("/api/login", methods=["POST"])
 def api_login():
     """ログインを処理するAPI"""
-    _json=request.get_json()
-    username=_json["username"]
-    password=_json["password"]
+    data = request.get_json()
+    print(data)
+    username = data.get('username')
+    password = data.get('password')
     user=User.query.filter(User.username==username).first()
     if user and user.check_password(password):
         login_user(user)
         session["user_id"]=user.id
+        print("成功")
         return jsonify({"result":"success"})
     else:
-        return jsonify({"result":"fail"})
+        return jsonify({"result":"fail"}),401
 
 @app.route("/logout")
 def logout():
@@ -198,7 +222,7 @@ def friend():
         friends_list.append(friend_user_dict)
     return render_template("friend.html", friends=friends_list)
 
-@app.route("/api/friend", methods=["GET"])
+@app.route("/api/friends", methods=["GET"])
 @login_required
 def api_friend():
     """フレンド一覧を返すAPI"""
