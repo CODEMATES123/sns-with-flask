@@ -1,4 +1,4 @@
-import React, { type FormEventHandler } from 'react'
+import { type FormEventHandler } from 'react'
 import { apiBaseURL } from '../constants'
 
 const handleSubmit: FormEventHandler<HTMLFormElement> = e => {
@@ -12,7 +12,7 @@ const handleSubmit: FormEventHandler<HTMLFormElement> = e => {
       "Content-Type": "application/json"
     },
     credentials: "include",
-    mode:"cors",
+    mode: "cors",
     body: JSON.stringify({ username, password }),
   }).then(res => {
     console.log(res)
@@ -20,14 +20,6 @@ const handleSubmit: FormEventHandler<HTMLFormElement> = e => {
       throw new Error("ログイン失敗")
     }
     return res.json()
-  }).then(() => {
-    fetch(`${apiBaseURL}/api/friends`, {
-      credentials: "include",
-      mode: "cors"
-    })
-      .then(res => res.json()).then(data => {
-        console.log(data)
-      })
   }).catch(err => {
     console.error(err)
   })

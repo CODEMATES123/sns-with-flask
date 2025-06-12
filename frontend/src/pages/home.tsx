@@ -1,7 +1,7 @@
 // import React, { useEffect, useState } from 'react'
-import { apiBaseURL } from '../constants'
+// import { apiBaseURL } from '../constants'
 import Menu from '../components/menu'
-import useSWR from 'swr'
+// import useSWR from 'swr'
 import usePosts from '../usePosts'
  
 // type Class={
