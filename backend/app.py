@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 from flask_login import LoginManager, UserMixin, login_required,login_user,logout_user,current_user
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
 import uuid 
 from datetime import datetime
 from werkzeug.security import generate_password_hash,check_password_hash
@@ -15,6 +16,7 @@ db.init_app(app)
 login_manager=LoginManager(app)
 login_manager.init_app(app)
 login_manager.login_view="login"
+CORS(app)
 
 @login_manager.user_loader
 def load_user(user_id):

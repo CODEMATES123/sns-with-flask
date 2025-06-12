@@ -33,7 +33,7 @@
 ### 技術要件
 開発に用いる言語は主にPython、HTML、CSSである。ただし、CSSについてはCSSフレームワークの一種であるTailwind CSSを使用する。素のCSSではページの構造が複雑になるにつれクラスの命名が複雑になるという問題を回避するためである。
 ## 素のCSSの場合
-```
+``` html:
 <div class="container">
   <div class="row">
     <div class="col-12">
@@ -43,7 +43,7 @@
 </div>
 ```
 ### Tailwind CSSの場合
-```
+``` html:
 <div class="max-w-3xl mx-auto">
   <div class="flex flex-col gap-4">
     <div class="flex flex-col gap-2">
