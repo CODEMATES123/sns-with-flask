@@ -7,6 +7,7 @@ const Menu = () => {
       <Link className='hover:underline p-2 rounded-md' to={"/friends"}>フレンド</Link>
       <Link className='hover:underline p-2 rounded-md' to={"/schedule"}>時間割</Link>
       <Link className='hover:underline p-2 rounded-md' to={"/create"}>投稿</Link>
+      <Link className='hover:underline p-2 rounded-md' to={"/login"}>ログイン</Link>
     </div>
   )
 }

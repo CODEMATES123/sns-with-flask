@@ -1,5 +1,6 @@
 import { type FormEventHandler } from 'react'
 import { apiBaseURL } from '../constants'
+import Menu from '../components/menu'
 
 const handleSubmit: FormEventHandler<HTMLFormElement> = e => {
   e.preventDefault()
@@ -28,6 +29,7 @@ const handleSubmit: FormEventHandler<HTMLFormElement> = e => {
 const Login = () => {
   return (
     <>
+    <Menu></Menu>
       <form onSubmit={handleSubmit} className='grid grid-cols-2 max-w-md mx-auto mt-8 gap-4'>
         <input className='bg-blue-300 border-2 border-blue-400 rounded-md p-2' type="text" defaultValue="" name="username" />
         <input className='bg-blue-300 border-2 border-blue-400 rounded-md p-2' type="password" name="password" id="" defaultValue="" />

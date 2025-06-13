@@ -1,27 +1,11 @@
 // import React, { useEffect, useState } from 'react'
 // import { apiBaseURL } from '../constants'
+import { Link } from 'react-router-dom'
 import Menu from '../components/menu'
 // import useSWR from 'swr'
 import usePosts from '../usePosts'
  
-// type Class={
-//   id:number,
-//   department:string,
-//   code:string,
-//   name:string,
-//   season:string,
-//   time:string,
-//   day:string,
-//   place:string,
-//   unit:number,
-//   teacher:string,
-//   grade_min:number,
-//   grade_max:number,
-//   note:string,
-//   error:string,
-//   is_spring:boolean,
-//   is_autumn:boolean
-// }
+
 
 const Home = () => {
   // const [posts,setPosts]=useState([])
@@ -29,7 +13,14 @@ const Home = () => {
   return (
     <div>
     <Menu/>
-    {isLoading?"ロード中...":posts.length==0?"投稿がありません":JSON.stringify(posts)}
+    {isLoading?"ロード中...":posts?.length==0?"投稿がありません":posts?.map((item,i)=>{
+      return (<div className='border border-gray-300 rounded-md shadow' key={i}>
+        <p className='text-2xl'>{item.post.title}</p>
+        <p>{item.post.content}</p>
+        <Link className='text-blue-500' to={`user/${item.post.user_id}`}>{item.username}</Link>
+        <Link className='text-blue-500' to={`post/${item.post.id}`}>詳細</Link>
+      </div>)
+    })}
     </div>
   )
 }

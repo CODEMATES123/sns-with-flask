@@ -28,14 +28,16 @@ const Schedule = () => {
     return fetch(key, { credentials: 'include' }).then(res => res.json() as Promise<Class[]>)
   })
   return (
-    <div className=''>
+    <div className='bg-[url(/economics.jpg)] bg-contain bg-fixed min-h-screen max-w-full p-5'>
         <Menu />
-      <div className='grid grid-cols-6 gap-3 w-full'>
-      {isLoading ? "ロード中" : data?.map(item => {
+      <div className='gap-5 grid grid-cols-2 md:grid-cols-4'>
+      {isLoading ? "ロード中" : data?.map((item,idx) => {
         return (
-          <div className='rounded-md border-green-400 border-2 p-4'>
-            <Link to={`/class/${item.id}`} className='text-blue-700 hover:text-blue-900'>{item.name}</Link>
-          </div>
+          <Link className='rounded-md border-white/30 border hover:shadow-blue-600 hover:shadow transition-all p-4 backdrop-blur-sm bg-orange-300/30 hover:scale-105' key={idx} to={`/class/${item.id}`}>
+            <span className='border-red-500/50 border-2 rounded-md p-1'>{item.place}</span>
+            <p className='text-blue-700 hover:text-blue-900 text-xl'>{item.name}</p>
+            <p className='text-sm'>{item.teacher}</p>
+          </Link>
         )
       })}
       </div>

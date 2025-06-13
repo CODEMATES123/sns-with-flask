@@ -24,7 +24,6 @@ class Post(db.Model):
             "id": self.id,
             "title": self.title,
             "content": content,
-            "ip": self.ip,
             "created_at": self.created_at.strftime("%Y-%m-%d %H:%M:%S"),
             "user_id": self.user_id
         }

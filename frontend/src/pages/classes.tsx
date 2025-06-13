@@ -1,26 +1,7 @@
 import { apiBaseURL } from '../constants'
 import useSWR from 'swr'
 import Menu from '../components/menu'
-
-type Class = {
-  url: string | undefined
-  id: number,
-  department: string,
-  code: string,
-  name: string,
-  season: string,
-  time: string,
-  day: string,
-  place: string,
-  unit: number,
-  teacher: string,
-  grade_min: number,
-  grade_max: number,
-  note: string,
-  error: string,
-  is_spring: boolean,
-  is_autumn: boolean
-}
+import type { Class } from '../types'
 
 const Classes = () => {
   const fetcher = async (key: string) => {
