@@ -1,3 +1,4 @@
+from time import sleep
 from flask import Flask, json, jsonify, redirect, render_template, request, session, url_for
 from flask_login import LoginManager, UserMixin, login_required,login_user,logout_user,current_user
 from flask_sqlalchemy import SQLAlchemy
@@ -353,7 +354,7 @@ def classes():
         filters.append(Class.day==day)
     if teacher:
         filters.append(Class.teacher.like(f"%{teacher}%"))
-    classes=Class.query.filter(*filters).limit(1000).all()
+    classes=Class.query.filter(*filters).distinct(Class.code).limit(1000).all()
     return render_template("classes.html", classes=list(map(lambda x: x.to_dict(), classes)))
 
 @app.route("/api/classes")
@@ -386,7 +387,7 @@ def api_classes():
         filters.append(Class.day==day)
     if teacher:
         filters.append(Class.teacher.like(f"%{teacher}%"))
-    classes=list(map(Class.to_dict,Class.query.filter(*filters).limit(1000).all()))
+    classes=list(map(Class.to_dict,Class.query.filter(*filters).distinct(Class.code).limit(100).all()))
     return jsonify(classes)
 
 @app.route("/class/<uuid:class_id>")
