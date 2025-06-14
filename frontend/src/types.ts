@@ -4,7 +4,7 @@ type Class={
   code:string,
   name:string,
   season:string,
-  time:string,
+  time:number,
   day:string,
   place:string,
   unit:number,
