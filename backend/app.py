@@ -379,7 +379,7 @@ def api_classes():
         filters.append(Class.name.like(f"%{name}%"))
     if code:
         filters.append(Class.code.like(f"%{code}%"))
-    if department:
+    if department and department!="*":
         filters.append(Class.department==department)
     if time:
         filters.append(Class.time==time)
@@ -387,7 +387,7 @@ def api_classes():
         filters.append(Class.day==day)
     if teacher:
         filters.append(Class.teacher.like(f"%{teacher}%"))
-    classes=list(map(Class.to_dict,Class.query.filter(*filters).distinct(Class.code).limit(100).all()))
+    classes=list(map(Class.to_dict,Class.query.distinct(Class.code).filter(*filters).limit(100).all()))
     return jsonify(classes)
 
 @app.route("/class/<uuid:class_id>")

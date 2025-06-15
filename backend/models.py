@@ -11,10 +11,15 @@ class Post(db.Model):
     __tablename__="posts"
     id=db.Column(db.String, primary_key=True, default=lambda x: str(uuid.uuid4()))
     title=db.Column(db.String, nullable=False)
+    """タイトル"""
     content=db.Column(db.String, nullable=False)
+    """内容"""
     ip=db.Column(db.String, nullable=False)
+    """IPアドレス"""
     created_at=db.Column(db.DateTime, default=datetime.now)
+    """作成日時"""
     user_id=db.Column(db.String, db.ForeignKey("users.id"), nullable=False)
+    """ユーザID"""
     def to_dict(self):
         if len(self.content)>100:
             content=self.content[:100]+"..."
@@ -32,10 +37,15 @@ class User(db.Model,UserMixin):
     __tablename__="users"
     id=db.Column(db.String, primary_key=True, default=lambda x: str(uuid.uuid4()))
     username=db.Column(db.String, nullable=False)
+    """ユーザ名"""
     email=db.Column(db.String, nullable=False)
+    """メールアドレス"""
     password=db.Column(db.String, nullable=False)
+    """パスワード（ハッシュ化済み）"""
     created_at=db.Column(db.DateTime, default=datetime.now)
+    """作成日時"""
     department=db.Column(db.String)
+    """学部"""
     def to_dict(self):
         return {
             "id": self.id,
@@ -53,9 +63,13 @@ class Reaction(db.Model):
     __tablename__="reactions"
     id=db.Column(db.String, primary_key=True, default=lambda x: str(uuid.uuid4()))
     post_id=db.Column(db.String, db.ForeignKey("posts.id"), nullable=False)
+    """投稿ID"""
     user_id=db.Column(db.String, db.ForeignKey("users.id"), nullable=False)
+    """ユーザID"""
     reaction=db.Column(db.String, nullable=False)
+    """リアクション"""
     created_at=db.Column(db.DateTime, default=datetime.now)
+    """作成日時"""
     def to_dict(self):
         return {
             "id": self.id,
@@ -82,41 +96,60 @@ class Friend(db.Model):
 class Class(db.Model):
     __tablename__="classes"
 
+
     id=db.Column(db.String, primary_key=True, default=lambda x: str(uuid.uuid4()))
-    """学部"""
+
     department=db.Column(db.String, nullable=False)
-    """年"""
+    """学部"""
+
     year=db.Column(db.Integer, nullable=False)
-    """授業コード"""
+    """年"""
+
     code=db.Column(db.String, nullable=False)
-    """科目名"""
+    """授業コード"""
+
     name=db.Column(db.String, nullable=False)
-    """開講時期"""
+    """講義名"""
+
     season=db.Column(db.String, nullable=False)
-    """時限"""
+    """開講時期"""
+
     time=db.Column(db.Integer, nullable=False)
-    """曜日"""
+    """時限"""
+
     day=db.Column(db.String, nullable=False)
-    """教室名称"""
+    """曜日"""
+
     place=db.Column(db.String, nullable=False)
-    """単位"""
+    """場所"""
+
     unit=db.Column(db.Integer, nullable=False)
-    """シラバスURL"""
+    """単位"""
+
     url=db.Column(db.String, nullable=False)
-    """講師"""
+    """シラバスURL"""
+
     teacher=db.Column(db.String, nullable=False)
-    """配当年次_最小"""
+    """講師"""
+
     grade_min=db.Column(db.Integer, nullable=False)
-    """配当年次_最大"""
+    """配当年次_最小"""
+
     grade_max=db.Column(db.Integer, nullable=False)
-    """備考"""
+    """配当年次_最大"""
+
     note=db.Column(db.String, nullable=False)
-    """エラー"""
+    """備考"""
+
     error=db.Column(db.String, nullable=False)
-    """春学期かどうか"""
+    """エラー"""
+
     is_spring=db.Column(db.Boolean, nullable=False)
-    """秋学期かどうか"""
+    """春学期かどうか"""
+
     is_autumn=db.Column(db.Boolean, nullable=False)
+    """秋学期かどうか"""
+
     def to_dict(self):
         return {
             "id": self.id,

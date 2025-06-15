@@ -29,6 +29,8 @@ const ClassDetail = () => {
         <p>時限:{classDetails?.class_detail.time==-10 ? "集中・その他" : classDetails?.class_detail.time}</p>
         <p>単位数:{classDetails?.class_detail.unit}</p>
         <p>注意事項:{classDetails?.class_detail.note}</p>
+        <p>配当最大年次:{classDetails?.class_detail.grade_max}</p>
+        <p>配当最小年次:{classDetails?.class_detail.grade_min}</p>
         {classDetails?.class_detail.error!==""?<>
         <p className='text-red-500'>取得エラー！:{classDetails?.class_detail.error}</p>
         </>:<></>}
